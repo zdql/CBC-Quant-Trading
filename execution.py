@@ -42,7 +42,7 @@ class Executor():
             address=self._Trader, abi=self._TraderAbi)
 
         call_fun = pool_contract.functions.store(5).buildTransaction(
-            {"chainId": chain_id, "from": my_address, "nonce": nonce + 1}
+            {"chainId": self._CHAINID, "from": self._ADDRESS, "nonce": self._NONCE + 1}
         )
         sign_call_fun = w3.eth.account.signTransaction(
             call_fun, private_key=private_key)

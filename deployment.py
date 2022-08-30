@@ -1,12 +1,15 @@
 from eth_utils import address
 from web3 import Web3
 import os
-from solc import compile_standard, install_solc
+from solcx import compile_standard
+import solcx
 from dotenv import load_dotenv
 import json
 
 
 load_dotenv()
+
+solcx.install_solc('0.7.6')
 
 
 class Deployer:
@@ -18,7 +21,7 @@ class Deployer:
         self._PRIVATE_KEY = os.getenv('PRIVATE_KEY')
         self._CONTRACT_NAME = CONTRACT_NAME
 
-    def compile(self, version):
+    def compile(self):
         name = self._CONTRACT_NAME
         with open(f"./{name}.sol", "r") as file:
             simple_storage_file = file.read()
@@ -26,7 +29,7 @@ class Deployer:
         compiled_sol = compile_standard(
             {
                 "language": "Solidity",
-                "sources": {"Trader.sol": {"content": simple_storage_file}},
+                "sources": {f"{name}.sol": {"content": simple_storage_file}},
                 "settings": {
                     "outputSelection": {
                         "*": {
@@ -35,18 +38,18 @@ class Deployer:
                     }
                 },
             },
-            solc_version=version,
+            solc_version='0.7.6',
         )
 
         with open(f"compiled_{name}.json", "w") as file:
             json.dump(compiled_sol, file)
 
           # get bytecode
-        self._bytecode = compiled_sol["contracts"][f"{name}.sol"]["Trader"]["evm"]["bytecode"]["object"]
+        self._bytecode = compiled_sol["contracts"][f"{name}.sol"][name]["evm"]["bytecode"]["object"]
 
         # get abi
         self._abi = json.loads(
-            compiled_sol["contracts"][f"{name}.sol"]["Trader"]["metadata"]
+            compiled_sol["contracts"][f"{name}.sol"][name]["metadata"]
         )["output"]["abi"]
 
     def sign(self, provider, transaction):

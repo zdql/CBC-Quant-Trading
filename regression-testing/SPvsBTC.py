@@ -38,6 +38,7 @@ pred = model.predict(x_test)
 
 plt.plot(x_test, pred, color="red")
 
+# Model coefficient
 print(model.coef_)
 # % accuracy
 print(model.score(x_test, y_test))

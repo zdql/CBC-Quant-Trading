@@ -9,6 +9,8 @@ const hre = require("hardhat");
 async function main() {
   const trader = '0x16B6B6183815983a53821621d3ED328c467063E1';
   const Trader = await hre.ethers.getContractFactory("Trader");
+  Trader.bind(trader);
+  
 
   console.log(
     `Deployed UNIv3 Trader for ${weth} and ${dai} with fee: ${fee} deployed to ${trader.address}`

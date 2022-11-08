@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from transactions import Buy, Sell, Nop
 import time
+import re
 
 
 class PortfolioManager:
@@ -34,10 +35,7 @@ class PortfolioManager:
     def execute_transaction(self, tx, time):
         if isinstance(tx, Buy):
             currency_price = self.data[tx.currency][time]
-            if tx.fraction:
-                tx_amt_usd = tx.amount * self.cash
-            else:
-                tx_amt_usd = min(currency_price * tx_amt, self.cash)
+            tx_amt_usd = min(currency_price * tx.amount, self.cash)
             tx_amt = tx_amt_usd / currency_price
 
             self.cash -= tx_amt_usd
@@ -45,10 +43,7 @@ class PortfolioManager:
 
         elif isinstance(tx, Sell):
             currency_price = self.data[tx.currency][time]
-            if tx.fraction:
-                tx_amt = tx.amount * self.investments[tx.currency]
-            else:
-                tx_amt = min(tx.amount, self.investments[tx.currency])
+            tx_amt = tx.amount
             tx_amt_usd = tx_amt * currency_price
 
             self.investments[tx.currency] -= tx_amt
@@ -68,9 +63,17 @@ class PortfolioManager:
         orderbook = pd.concat(strat_orders, axis=1).sort_index()
 
         orderbook = orderbook[~orderbook.isna().all(axis=1)]
+
         for time, orders in orderbook.iterrows():
             for order in orders:
                 self.execute_transaction(order, time)
+
+        for i in orderbook.columns:
+            orderbook[i] = orderbook[i].apply(
+                lambda x: re.sub(r'[^0-9, ., -]', '', str(x)))
+            orderbook[i] = orderbook[i].apply(
+                lambda x: float(x))
+        self.orderbook_final = orderbook
 
     def portfolio_value(self):
         total_cash = self.cash

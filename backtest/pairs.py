@@ -17,6 +17,10 @@ df = df.iloc[-40000:]
 btc_close = df.iloc[:, 0]
 eth_close = df.iloc[:, 1]
 
+combined_df = pd.concat([eth_close, btc_close], axis=1)
+
+combined_df.columns = ['eth_close', 'btc_close']
+
 pm.link_data("btc", btc_close)
 pm.link_data("eth", eth_close)
 
@@ -30,14 +34,15 @@ b = results.params["close"]
 const = results.params["const"]
 
 spread = eth_close - b * btc_close - const
+
 mean = spread.mean()
 std = spread.std()
 normalized_spread = (spread - mean) / std
-plt.plot(normalized_spread)
-plt.axhline(0, color="black")
-plt.axhline(1, color="red")
-plt.axhline(-1, color="red")
-plt.show()
+# plt.plot(normalized_spread)
+# plt.axhline(0, color="black")
+# plt.axhline(1, color="red")
+# plt.axhline(-1, color="red")
+# plt.show()
 
 
 def btc_strat(data):
@@ -54,9 +59,9 @@ def btc_strat(data):
 
     orders = below_neg_1.astype(int) - above_1.astype(int) - sell.astype(int)
     return orders.map(
-        lambda x: pm.Sell("btc", 1, fraction=True)
+        lambda x: pm.Sell("btc", 1)
         if x == 1
-        else pm.Buy("btc", 1, fraction=True)
+        else pm.Buy("btc", 1)
         if x == -1
         else pm.Nop()
     )
@@ -76,9 +81,9 @@ def eth_strat(data):
 
     orders = below_neg_1.astype(int) - above_1.astype(int) - sell.astype(int)
     return orders.map(
-        lambda x: pm.Buy("eth", 1, fraction=True)
+        lambda x: pm.Buy("eth", 1/b)
         if x == 1
-        else pm.Sell("eth", 1, fraction=True)
+        else pm.Sell("eth", 1/b)
         if x == -1
         else pm.Nop()
     )
@@ -88,5 +93,8 @@ pm.add_strategy(btc_strat)
 pm.add_strategy(eth_strat)
 pm.run()
 print(pm.portfolio_value())
+
+results = combined_df.join(pm.orderbook_final)
+results.to_csv('trades.csv')
 
 print(pm.investments)

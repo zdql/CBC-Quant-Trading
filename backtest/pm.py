@@ -77,8 +77,10 @@ class PortfolioManager:
 
     def portfolio_value(self):
         total_cash = self.cash
+
         for currency, amount in self.investments.items():
             total_cash += amount * self.data[currency].ffill().iloc[-1]
+
         return total_cash
 
     def summarize(self):

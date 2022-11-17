@@ -31,6 +31,8 @@ btc_close = sm.add_constant(btc_close)
 results = sm.OLS(eth_close, btc_close).fit()
 btc_close = btc_close["close"]
 b = results.params["close"]
+
+
 const = results.params["const"]
 
 spread = eth_close - b * btc_close - const
@@ -38,14 +40,15 @@ spread = eth_close - b * btc_close - const
 mean = spread.mean()
 std = spread.std()
 normalized_spread = (spread - mean) / std
-# plt.plot(normalized_spread)
-# plt.axhline(0, color="black")
-# plt.axhline(1, color="red")
-# plt.axhline(-1, color="red")
-# plt.show()
+plt.plot(normalized_spread)
+plt.axhline(0, color="black")
+plt.axhline(1, color="red")
+plt.axhline(-1, color="red")
+plt.show()
 
 
 def btc_strat(data):
+
     spread = data["eth"] - b * data["btc"] - const
     normalized_spread = (spread - mean) / std
 
@@ -96,5 +99,6 @@ print(pm.portfolio_value())
 
 results = combined_df.join(pm.orderbook_final)
 results.to_csv('trades.csv')
+
 
 print(pm.investments)
